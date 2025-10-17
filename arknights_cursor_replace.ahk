@@ -8,17 +8,28 @@ GroupAdd "Emulator", "ahk_exe crosvm.exe" ; GooglePlayGames
 CursorPath := "C:\your\path\to\cursor\here.cur"  ; ファイル形式は.curもしくは.ani
 
 ; ====================================================================================
-; 設定用ホットキー (例: エミュレータがアクティブな時にCtrl + Alt + 0)
-#HotIf WinActive("ahk_group Emulator")
-^!0::
-{
+OnExit(resetCursor) ; スクリプト終了時にカーソルをもとに戻す
+
+/**
+ * カスタムカーソルを読み込み、システムカーソルとして設定します。
+ * サイズを指定しない場合は、OSが設定しているカーソルサイズに従います。
+ * @param {Integer} cx - カーソルの幅 (0の場合はLR_DEFAULTSIZEを使用)
+ * @param {Integer} cy - カーソルの高さ (0の場合はLR_DEFAULTSIZEを使用)
+ */
+changeCursor(cx := 0, cy := 0){
+    ; サイズ指定があるかどうかでロードフラグを決定
+    if (cx > 0 || cy > 0)
+        dwFlags := 0x00000010 ; サイズ指定あり (LR_DEFAULTSIZEを使わない)
+    else
+        dwFlags := 0x00000040 | 0x00000010 ; サイズ指定なし(デフォルトサイズ)
+
     ;カーソルを読み込み
     hCur := DllCall("LoadImageW", "Ptr", 0, ; HINSTANCE hInst = NULL
     "WStr", CursorPath, ; LPCWSTR name = CursorPath
     "UInt", 2, ; UINT type = IMAGE_CURSOR(2)
-    "Int", 0, ; int cx = 0
-    "Int", 0, ; int cy = 0
-    "UInt", 0x00000040 | 0x00000010, ; UINT fuLoad = LR_DEFAULTSIZE(0x00000040) | LR_LOADFROMFILE(0x00000010)
+    "Int", cx, ; int cy
+    "Int", cy, ; int cy
+    "UInt", dwFlags, ; UINT fuLoad = LR_DEFAULTSIZE(0x00000040) | LR_LOADFROMFILE(0x00000010)
     "Ptr") ; return value, type: HANDLE
 
     ; 読み込みに成功した場合のみシステムカーソルを設定
@@ -33,10 +44,12 @@ CursorPath := "C:\your\path\to\cursor\here.cur"  ; ファイル形式は.curも�
         MsgBox("カーソルファイルの読み込みに失敗しました。パスを確認してください: " . CursorPath)
     }
 }
-#HotIf
-; デフォルトに戻すホットキー (例: エミュレータが非アクティブ時にCtrl + Alt + 0)
-^!0::
-{
+
+/**
+ * システムカーソルをレジストリに保存されているデフォルト値に戻します。
+ * @param * は OnExit が渡す引数 (ExitReason, ExitCode) を受け取るためのワイルドカードです。
+ */
+resetCursor(*){
     ; システムカーソルをレジストリに保存されている値に戻す
     DllCall("SystemParametersInfoW", "UInt", 0x0057, ; UINT uiAction = SPI_SETCURSORS(0x0057)
     "UInt", 0, ; UINT uiParam = 0
@@ -45,27 +58,14 @@ CursorPath := "C:\your\path\to\cursor\here.cur"  ; ファイル形式は.curも�
     "UInt") ; return value, type: BOOL
 }
 
+; ====================================================================================
+; ホットキー定義
 
-; (おまけ) カーソルサイズを指定して読み込む場合
-^!9:: ; (例: Ctrl + Alt + 0)
-{
-    ; 128x128のサイズで読み込む
-    hCur := DllCall("LoadImageW", "Ptr", 0,
-    "WStr", CursorPath,
-    "UInt", 2,
-    "Int", 128, ; int cx = 128
-    "Int", 128, ; int cy = 128
-    "UInt", 0x00000010, ; UINT fuLoad = LR_LOADFROMFILE(0x00000010)
-    "Ptr")
+; エミュレーターがアクティブな場合
+#HotIf WinActive("ahk_group Emulator")
+^!0::changeCursor()          ; Ctrl+Alt+0: カスタムカーソルに変更（OSデフォルトサイズ）
+^!9::changeCursor(128, 128)  ; Ctrl+Alt+9: カスタムカーソルに変更（128x128サイズ）
+#HotIf
 
-    if (hCur != 0)
-    {
-        DllCall("SetSystemCursor", "Ptr", hCur,
-        "UInt", 32512,
-        "Int")
-    }
-    else
-    {
-        MsgBox("カーソルファイルの読み込みに失敗しました。パスを確認してください: " . CursorPath)
-    }
-}
+; エミュレータが非アクティブな場合
+^!0::resetCursor()           ; Ctrl+Alt+0: デフォルトカーソルに戻す
