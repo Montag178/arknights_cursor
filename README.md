@@ -17,6 +17,8 @@
 | **pointer\_spot\_cyan\_thick.cur** | <img width="128" height="128" alt="pointer_spot_cyan_thick" src="https://github.com/user-attachments/assets/535796d7-42c6-4e31-84d5-409fda1554c2" /> |
 | **pointer\_spot\_gray.cur** |  <img width="128" height="128" alt="pointer_spot" src="https://github.com/user-attachments/assets/f3c18bbd-6b7b-48d0-9a81-aeb0815d9b4f" /> |
 | **pointer\_spot\_gray\_thick.cur** | <img width="128" height="128" alt="pointer _spot_thick" src="https://github.com/user-attachments/assets/dec09f90-5840-41af-be02-619f7bd4cc81" /> |
+| **hand** | <img width="128" height="128" alt="hand" src="https://github.com/user-attachments/assets/ac829457-0cc0-4445-87a6-e383c1f2c91d" /> |
+
 
 ## **🛠️ 使用方法 (AHKスクリプト)**
 
